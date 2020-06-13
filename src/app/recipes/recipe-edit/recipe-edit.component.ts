@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormGroup, FormControl, FormArray, Validators } from '@angular/forms';
 import { RecipeService } from '../recipe.service';
-import { Recipe } from '../recipe.model';
 
 @Component({
   selector: 'app-recipe-edit',
@@ -10,24 +9,28 @@ import { Recipe } from '../recipe.model';
   styleUrls: ['./recipe-edit.component.css']
 })
 export class RecipeEditComponent implements OnInit {
-  id:number;
-  editMode=false;
-  recipeForm:FormGroup;
+  id: number;
+  editMode = false;
+  recipeForm: FormGroup;
 
-  constructor(private route:ActivatedRoute,
-              private recipeService: RecipeService,
-              private router: Router) { }
+  constructor(
+    private route: ActivatedRoute,
+    private recipeService: RecipeService,
+    private router: Router
+  ) {}
 
-  ngOnInit(): void {
-    this.route.params
-    .subscribe(
-      (params: Params) => {
-        this.id=+params['id'];
-        this.editMode = params['id'] !=null;
-        this.initForm();
-      }
-    );
+  ngOnInit() {
+    this.route.params.subscribe((params: Params) => {
+      this.id = +params['id'];
+      this.editMode = params['id'] != null;
+      this.initForm();
+    });
   }
+
+  get controls() { // a getter!
+    //console.log('pasa por el getter de controls')
+    return (<FormArray>this.recipeForm.get('ingredients')).controls;
+    this.recipeForm.get('ingredients')  }
 
   onSubmit() {
     // const newRecipe = new Recipe(
@@ -43,12 +46,7 @@ export class RecipeEditComponent implements OnInit {
     this.onCancel();
   }
 
-  get controls() { // a getter!
-    //console.log('pasa por el getter de controls')
-    return (<FormArray>this.recipeForm.get('ingredients')).controls;
-    this.recipeForm.get('ingredients')  }
-  
-  onAddIngredient(){
+  onAddIngredient() {
     (<FormArray>this.recipeForm.get('ingredients')).push(
       new FormGroup({
         name: new FormControl(null, Validators.required),
@@ -57,37 +55,39 @@ export class RecipeEditComponent implements OnInit {
           Validators.pattern(/^[1-9]+[0-9]*$/)
         ])
       })
-    )
+    );
   }
   onDeleteIngredient(index: number) {
-    (<FormArray>this.recipeForm.get('ingredients')).removeAt(index);}
-  onCancel(){
-    this.router.navigate(['../'], {relativeTo: this.route});
+    (<FormArray>this.recipeForm.get('ingredients')).removeAt(index);
   }
-  
-  private initForm(){
-    let recipeName= '';
-    let recipeImagePath='';
+
+  onCancel() {
+    this.router.navigate(['../'], { relativeTo: this.route });
+  }
+
+  private initForm() {
+    let recipeName = '';
+    let recipeImagePath = '';
     let recipeDescription = '';
     let recipeIngredients = new FormArray([]);
 
-    if (this.editMode){
+    if (this.editMode) {
       const recipe = this.recipeService.getRecipe(this.id);
       recipeName = recipe.name;
       recipeImagePath = recipe.imagePath;
       recipeDescription = recipe.description;
-      if (recipe['ingredients']){
-         for(let ingredient of recipe.ingredients){
-           recipeIngredients.push(
-             new FormGroup({
-               name: new FormControl(ingredient.name, Validators.required),
-               amount: new FormControl(ingredient.amount,[
-                 Validators.required,
-                 Validators.pattern(/^[1-9]+[0-9]*$/)
-                ]) 
-             })
-           );
-          }
+      if (recipe['ingredients']) {
+        for (let ingredient of recipe.ingredients) {
+          recipeIngredients.push(
+            new FormGroup({
+              name: new FormControl(ingredient.name, Validators.required),
+              amount: new FormControl(ingredient.amount, [
+                Validators.required,
+                Validators.pattern(/^[1-9]+[0-9]*$/)
+              ])
+            })
+          );
+        }
       }
     }
 
@@ -97,6 +97,5 @@ export class RecipeEditComponent implements OnInit {
       description: new FormControl(recipeDescription, Validators.required),
       ingredients: recipeIngredients
     });
-    }
-
+  }
 }
